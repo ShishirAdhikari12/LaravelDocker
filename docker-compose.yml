@@ -8,6 +8,7 @@ services:
       target: php
       args:
         - APP_ENV=${APP_ENV}
+    # restart: unless-stopped
     environment:
       - APP_ENV=${APP_ENV}
       - CONTAINER_ROLE=app
@@ -21,9 +22,31 @@ services:
       - redis
 
 
+  # websocket
+  websocket:
+    build:
+      context: .
+      target: php
+      args:
+        - APP_ENV=${APP_ENV}
+    # restart: unless-stopped
+    environment:
+      - APP_ENV=${APP_ENV}
+      - CONTAINER_ROLE=websocket
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    ports:
+      - "6001:6001"
+    depends_on:
+      - database
+      - redis
+
+
   # Database server
   database:
-    image: mysql:8.0
+    image: mysql:8.4
+    # restart: unless-stopped
     ports:
       - 3306:3306
     environment:
@@ -34,20 +57,38 @@ services:
     volumes:
       - db-data:/var/lib/mysql
 
-  
 
   # Redis server
   redis:
     image: redis:alpine
+    # restart: unless-stopped
     command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
     ports:
       - 6379:6379
+
+
+  # Queue Server
+  queue:
+    build:
+      context: .
+      target: php
+      args:
+        - APP_ENV=${APP_ENV}
+    # restart: unless-stopped
+    environment:
+      - APP_ENV=${APP_ENV}
+      - CONTAINER_ROLE=queue
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+
 
   # node
   node:
     build:
       context: .
       target: node
+    # restart: unless-stopped
     volumes:
       - .:/usr/src
       - ./node_modules:/usr/src/node_modules

@@ -11,11 +11,25 @@ else
     echo "env file exists."
 fi
 
-php artisan migrate
-php artisan key:generate
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
+# Generate APP_KEY only if missing
+if ! grep -q "^APP_KEY=base64:" .env; then
+        php artisan key:generate
+fi
 
-php artisan serve --port=$PORT --host=0.0.0.0 --env=.env
-exec docker-php-entrypoint "$@"
+role=${CONTAINER_ROLE:-app}
+
+if [ "$role" = "app" ]; then
+    php artisan migrate
+    php artisan cache:clear
+    php artisan config:clear
+    php artisan route:clear
+    exec php artisan serve \
+        --host=0.0.0.0 \
+        --port=$PORT
+elif [ "$role" = "queue" ]; then
+    echo "Running the queue ..."
+    php /var/www/artisan queue:work --verbose --tries=3 --timeout=18
+elif [ "$role" = "websocket" ]; then
+    echo "Running the websocket server ..."
+    php artisan websockets:serve
+fi
