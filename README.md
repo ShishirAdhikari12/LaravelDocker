@@ -1,8 +1,20 @@
-## Laravel WebSockets Chat Application Example
+# Start
+docker compose up --build
 
-Realtime chat application built with Laravel WebSockets. 
+# Stop
+docker compose down
 
-# Links
-- [Video Tutorial](https://youtu.be/6Cki03hGjpQ).
-- [Blog Post](https://www.ahtcloud.com/laravel-websockets-example-chat-application)
+# Enter PHP
+docker compose exec php bash
 
+# Migrate
+docker compose exec php php artisan migrate
+
+# Queue
+docker compose logs queue
+
+# WebSocket
+docker compose logs websocket
+
+# Node
+docker compose exec node npm run dev
